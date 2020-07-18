@@ -104,13 +104,6 @@ class Main:
                 else:
                     break
             self.movelistbyone()
-    # \|/ to usun pan jepson, to tescik tylko \|/
-    def qweqwe(self):
-        qwer = 0
-        while qwer < 512:
-            print(self.calclist)
-            self.movelistbyone()
-            qwer =qwer +1 
 
 ma = Main()
 ma.calculate()
