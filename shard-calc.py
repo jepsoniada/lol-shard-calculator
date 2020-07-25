@@ -24,16 +24,33 @@ class calcpart:
 # 7800 +1560 -4680
 
 class Main:
-    def __init__(self, add = [0, 90, 270, 630, 960, 1260, 1560], remove = [0, 450, 1350, 3150, 4800, 6300, 7800, 270, 810, 1890, 2880, 3780, 4680], maxactions = 7, shards = 4437, gotoscore = 2137, moe = 100):
-    # def __init__(self, add = [90, 270, 630], remove = [450, 1350, 3150, 4800], maxactions = 3, shards = 4437, gotoscore = 2137):
-        self.add = add
-        self.remove = remove
-        self.maxactions = maxactions
-        self.shards = shards
-        self.gotoscore = gotoscore
-        self.moe = moe 
+    def __init__(self, maxactions = 2, actionsbelow = True, shards = 4437, gotoscore = 2137, allowmoe = True, moev = 250):
+    # def __init__(self, actionsbelow = True, add = [0, 90, 270, 630, 960, 1260, 1560], remove = [0, 450, 1350, 3150, 4800, 6300, 7800, 270, 810, 1890, 2880, 3780, 4680], maxactions = 7, shards = 4437, gotoscore = 2137, moev = 100):
+        if allowmoe == 'y':
+            self.allowmoe = True
+        elif allowmoe == 'n':
+            self.allowmoe = False
+        else:
+            raise ValueError('got sth else than "y" or "n" in moe')
+        if actionsbelow == 'y':
+            self.actionsbelow = True
+        elif actionsbelow == 'n':
+            self.actionsbelow = False
+        else:
+            raise ValueError('got sth else than "y" or "n" in actionsbelow')
+        if self.actionsbelow:
+            self.add = [0, 90, 270, 630, 960, 1260, 1560]
+            self.remove = [0, 450, 1350, 3150, 4800, 6300, 7800, 270, 810, 1890, 2880, 3780, 4680]
+        else:
+            self.add = [90, 270, 630, 960, 1260, 1560]
+            self.remove = [450, 1350, 3150, 4800, 6300, 7800, 270, 810, 1890, 2880, 3780, 4680]
+        self.maxactions = int(maxactions)
+        self.shards = int(shards)
+        self.gotoscore = int(gotoscore)
+        self.moev = int(moev)
         self.calclist = []
-        self.calcfill(maxactions)
+        self.calcfill(self.maxactions)
+        print('ab: ', self.actionsbelow, 'am: ', self.allowmoe)
     def calcfill(self, howmuch):
         a = 0
         while a < howmuch:
@@ -81,18 +98,40 @@ class Main:
                         shardacc = plus(self.shards, self.add[b.plusindex])
                     else:
                         shardacc = minus(self.shards, self.remove[b.minusindex])
-            if (shardacc == 2087) or (shardacc == 2137):
+            prr = False
+            if self.actionsbelow:
                 noaction = 0
                 for a in self.calclist:
                     if (a.minusindex + a.plusindex) == 0:
                         noaction = noaction + 1
-                if noaction == self.maxactions:
-                    1
+                if noaction != self.maxactions:
+                    if self.gotoscore < self.shards:
+                        if self.allowmoe:
+                            if (shardacc >= (self.gotoscore - self.moev)) and (shardacc <= self.gotoscore):
+                                prr = not prr
+                        elif (shardacc > 0) and (shardacc <= self.gotoscore):
+                            prr = not prr
+                    else:
+                        if self.allowmoe:
+                            if (shardacc >= (self.gotoscore - self.moev)) and (shardacc <= self.gotoscore):
+                                prr = not prr
+                        elif (shardacc > self.shards) and (shardacc <= self.gotoscore):
+                            prr = not prr
+            else: 
+                if self.gotoscore < self.shards:
+                    if self.allowmoe:
+                        if (shardacc >= (self.gotoscore - self.moev)) and (shardacc <= self.gotoscore):
+                            prr = not prr
+                    elif (shardacc > 0) and (shardacc <= self.gotoscore):
+                        prr = not prr
                 else:
-                    print(self.calclist, shardacc)
-            # if shardacc > (self.gotoscore - self.moe) and shardacc < self.gotoscore:
-            # if True:
-                # print(self.calclist, shardacc)
+                    if self.allowmoe:
+                        if (shardacc >= (self.gotoscore - self.moev)) and (shardacc <= self.gotoscore):
+                            prr = not prr
+                    elif (shardacc > self.shards) and (shardacc <= self.gotoscore):
+                        prr = not prr
+            if prr:    
+                print(self.calclist, shardacc)
             negstackacc = 0
             for stack in self.calclist:
                 if (stack.minusindex or stack.plusindex or stack.symbol) == False:
@@ -104,6 +143,7 @@ class Main:
                 else:
                     break
             self.movelistbyone()
+# self, maxactions = 2, actionsbelow = True, shards = 4437, gotoscore = 2137, allowmoe = True, moev = 250
 
-ma = Main()
+ma = Main(input('how much shard to use: '), input('allow less shards (y/n): '), input('how much essense do you have: '), input('your goal: '), input('allow moe (margin of error) (y/n): '), input('how much: '))
 ma.calculate()
