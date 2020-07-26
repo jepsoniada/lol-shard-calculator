@@ -9,12 +9,16 @@ class calcpart:
         self.minusindex = minusindex
         self.plusindex = plusindex
     def so(self):
-        if self.symbol == False:
-            return 0
-        else:
+        if self.symbol:
             return 1
+        else:
+            return 0
     def __repr__(self):
         return f"(-{self.minusindex} , {self.so()}, +{self.plusindex} )"
+
+# class CalcResult:
+#     def __init__(self):
+
 
 # 450 +90 -270
 # 1350 +270 -810
@@ -38,12 +42,8 @@ class Main:
             self.actionsbelow = False
         else:
             raise ValueError('got sth else than "y" or "n" in actionsbelow')
-        if self.actionsbelow:
-            self.add = [0, 90, 270, 630, 960, 1260, 1560]
-            self.remove = [0, 450, 1350, 3150, 4800, 6300, 7800, 270, 810, 1890, 2880, 3780, 4680]
-        else:
-            self.add = [90, 270, 630, 960, 1260, 1560]
-            self.remove = [450, 1350, 3150, 4800, 6300, 7800, 270, 810, 1890, 2880, 3780, 4680]
+        self.add = [90, 270, 630, 960, 1260, 1560]
+        self.remove = [450, 1350, 3150, 4800, 6300, 7800, 270, 810, 1890, 2880, 3780, 4680]
         self.maxactions = int(maxactions)
         self.shards = int(shards)
         self.gotoscore = int(gotoscore)
@@ -52,18 +52,11 @@ class Main:
         self.calcfill(self.maxactions)
         print('ab: ', self.actionsbelow, 'am: ', self.allowmoe)
     def calcfill(self, howmuch):
+        self.calclist = []
         a = 0
         while a < howmuch:
             self.calclist.append(calcpart(False, 0, 0))
             a = a + 1
-    def ischecked(self):
-        for a in self.calclist:
-            if a.symbol:
-                if a.index != len(self.add):
-                    return False
-            else:
-                return False
-        return True
     def movelistbyone(self):
         for i, a in enumerate(self.calclist, start=0):
             if a.symbol == False:
@@ -83,7 +76,7 @@ class Main:
                     self.calclist[i].symbol = not self.calclist[i].symbol
                     if i < len(self.calclist) - 2:
                         continue
-    def calculate(self):
+    def singlecalc(self, actions):
         multi0count = 0
         while True:
             shardacc = 0
@@ -99,50 +92,41 @@ class Main:
                     else:
                         shardacc = minus(self.shards, self.remove[b.minusindex])
             prr = False
-            if self.actionsbelow:
-                noaction = 0
-                for a in self.calclist:
-                    if (a.minusindex + a.plusindex) == 0:
-                        noaction = noaction + 1
-                if noaction != self.maxactions:
-                    if self.gotoscore < self.shards:
-                        if self.allowmoe:
-                            if (shardacc >= (self.gotoscore - self.moev)) and (shardacc <= self.gotoscore):
-                                prr = not prr
-                        elif (shardacc > 0) and (shardacc <= self.gotoscore):
-                            prr = not prr
-                    else:
-                        if self.allowmoe:
-                            if (shardacc >= (self.gotoscore - self.moev)) and (shardacc <= self.gotoscore):
-                                prr = not prr
-                        elif (shardacc > self.shards) and (shardacc <= self.gotoscore):
-                            prr = not prr
-            else: 
-                if self.gotoscore < self.shards:
-                    if self.allowmoe:
-                        if (shardacc >= (self.gotoscore - self.moev)) and (shardacc <= self.gotoscore):
-                            prr = not prr
-                    elif (shardacc > 0) and (shardacc <= self.gotoscore):
+            if self.gotoscore < self.shards:
+                if self.allowmoe:
+                    if (shardacc >= (self.gotoscore - self.moev)) and (shardacc <= self.gotoscore):
                         prr = not prr
-                else:
-                    if self.allowmoe:
-                        if (shardacc >= (self.gotoscore - self.moev)) and (shardacc <= self.gotoscore):
-                            prr = not prr
-                    elif (shardacc > self.shards) and (shardacc <= self.gotoscore):
+                elif (shardacc > 0) and (shardacc <= self.gotoscore):
+                    prr = not prr
+            else:
+                if self.allowmoe:
+                    if (shardacc >= (self.gotoscore - self.moev)) and (shardacc <= self.gotoscore):
                         prr = not prr
+                elif (shardacc > self.shards) and (shardacc <= self.gotoscore):
+                    prr = not prr
             if prr:    
                 print(self.calclist, shardacc)
             negstackacc = 0
             for stack in self.calclist:
                 if (stack.minusindex or stack.plusindex or stack.symbol) == False:
                     negstackacc = negstackacc + 1
-            if negstackacc == self.maxactions:
+            if negstackacc == actions:
                 if multi0count < 1:
                     multi0count = multi0count + 1
                     print(multi0count)
                 else:
                     break
             self.movelistbyone()
+    def calculate(self):
+        if self.actionsbelow:
+            actAction = self.maxactions
+            while actAction > 0:
+                self.calcfill(actAction)
+                self.singlecalc(actAction)
+                actAction = actAction - 1
+        else:
+            self.singlecalc(self.maxactionsk)
+
 # self, maxactions = 2, actionsbelow = True, shards = 4437, gotoscore = 2137, allowmoe = True, moev = 250
 
 ma = Main(input('how much shard to use: '), input('allow less shards (y/n): '), input('how much essense do you have: '), input('your goal: '), input('allow moe (margin of error) (y/n): '), input('how much: '))
