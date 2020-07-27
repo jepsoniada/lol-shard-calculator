@@ -1,24 +1,47 @@
-print('ayy')
 def plus(a, b):
     return a + b
 def minus(a, b):
     return a - b
-class calcpart:
+class Calcpart:
     def __init__(self, symbol, minusindex, plusindex):
         self.symbol = symbol
         self.minusindex = minusindex
         self.plusindex = plusindex
-    def so(self):
+    def symbolDisplay(self):
         if self.symbol:
             return 1
         else:
             return 0
     def __repr__(self):
-        return f"(-{self.minusindex} , {self.so()}, +{self.plusindex} )"
+        return f"(-{self.minusindex} , {self.symbolDisplay()}, +{self.plusindex} )"
 
-# class CalcResult:
-#     def __init__(self):
+class OverallCalcResults:
+    def __init__(self):
+        self.banlist = []
+        self.resultList = []
+    def addResult(self, resultObj):
+        if len(self.resultList) == 0:
+            self.resultList.append(resultObj)
+        else:
+            anacc = 0
+            for i, a in enumerate(self.resultList, start=0):
+                if a.value == resultObj.value:
+                    self.resultList[i].wayToGet.append(resultObj.wayToGet)
+                    break
+                else:
+                    anacc = anacc + 1
+            if anacc == len(self.resultList):
+                self.resultList.append(resultObj)
+ocr = OverallCalcResults()
 
+class CalcResult:
+    def __init__(self, value, wayToGet):
+    # def __init__(self, value):
+        self.value = value
+        self.wayToGet = [wayToGet]
+    def __repr__(self):
+        return f"\n{self.value}    {self.wayToGet}\n"
+        # return f"\n{self.value}"
 
 # 450 +90 -270
 # 1350 +270 -810
@@ -28,7 +51,7 @@ class calcpart:
 # 7800 +1560 -4680
 
 class Main:
-    def __init__(self, maxactions = 2, actionsbelow = True, shards = 4437, gotoscore = 2137, allowmoe = True, moev = 250):
+    def __init__(self, maxactions = 3, actionsbelow = 'y', shards = 450, gotoscore = 540, allowmoe = 'n', moev = 0):
     # def __init__(self, actionsbelow = True, add = [0, 90, 270, 630, 960, 1260, 1560], remove = [0, 450, 1350, 3150, 4800, 6300, 7800, 270, 810, 1890, 2880, 3780, 4680], maxactions = 7, shards = 4437, gotoscore = 2137, moev = 100):
         if allowmoe == 'y':
             self.allowmoe = True
@@ -55,9 +78,32 @@ class Main:
         self.calclist = []
         a = 0
         while a < howmuch:
-            self.calclist.append(calcpart(False, 0, 0))
+            self.calclist.append(Calcpart(False, 0, 0))
             a = a + 1
-    def movelistbyone(self):
+    def addResulter(self, resulte):
+        fullcalc = []
+        for a in self.calclist:
+            if a.symbol:
+                fullcalc.append(f"+ {self.add[a.plusindex]}")
+            else:
+                fullcalc.append(f"- {self.remove[a.minusindex]}")
+        ocr.addResult(CalcResult(resulte, fullcalc))
+        # ocr.addResult(resulte)
+    def generateSum(self):
+        shardacc = 0
+        for i, b in enumerate(self.calclist, start=0):
+            if i > 0:
+                if b.symbol:
+                    shardacc = plus(shardacc, self.add[b.plusindex])
+                else:
+                    shardacc = minus(shardacc, self.remove[b.minusindex])
+            else:
+                if b.symbol:
+                    shardacc = plus(self.shards, self.add[b.plusindex])
+                else:
+                    shardacc = minus(self.shards, self.remove[b.minusindex])
+        return shardacc
+    def moveListByOne(self):
         for i, a in enumerate(self.calclist, start=0):
             if a.symbol == False:
                 if a.minusindex < len(self.remove) - 1:
@@ -76,22 +122,12 @@ class Main:
                     self.calclist[i].symbol = not self.calclist[i].symbol
                     if i < len(self.calclist) - 2:
                         continue
-    def singlecalc(self, actions):
+    def singleCalc(self, actions):
         multi0count = 0
         while True:
-            shardacc = 0
-            for i, b in enumerate(self.calclist, start=0):
-                if i > 0:
-                    if b.symbol:
-                        shardacc = plus(shardacc, self.add[b.plusindex])
-                    else:
-                        shardacc = minus(shardacc, self.remove[b.minusindex])
-                else:
-                    if b.symbol:
-                        shardacc = plus(self.shards, self.add[b.plusindex])
-                    else:
-                        shardacc = minus(self.shards, self.remove[b.minusindex])
+            shardacc = self.generateSum()
             prr = False
+            # checking display setings and is "shardacc" above 0 
             if self.gotoscore < self.shards:
                 if self.allowmoe:
                     if (shardacc >= (self.gotoscore - self.moev)) and (shardacc <= self.gotoscore):
@@ -106,6 +142,8 @@ class Main:
                     prr = not prr
             if prr:    
                 print(self.calclist, shardacc)
+                self.addResulter(shardacc)
+            # checking is all possibilities tested
             negstackacc = 0
             for stack in self.calclist:
                 if (stack.minusindex or stack.plusindex or stack.symbol) == False:
@@ -116,18 +154,22 @@ class Main:
                     print(multi0count)
                 else:
                     break
-            self.movelistbyone()
+            self.moveListByOne()
     def calculate(self):
         if self.actionsbelow:
             actAction = self.maxactions
             while actAction > 0:
                 self.calcfill(actAction)
-                self.singlecalc(actAction)
+                self.singleCalc(actAction)
                 actAction = actAction - 1
         else:
-            self.singlecalc(self.maxactionsk)
+            self.singleCalc(self.maxactionsk)
 
-# self, maxactions = 2, actionsbelow = True, shards = 4437, gotoscore = 2137, allowmoe = True, moev = 250
+# # self, maxactions = 2, actionsbelow = True, shards = 4437, gotoscore = 2137, allowmoe = False, moev = 0
 
-ma = Main(input('how much shard to use: '), input('allow less shards (y/n): '), input('how much essense do you have: '), input('your goal: '), input('allow moe (margin of error) (y/n): '), input('how much: '))
+# ma = Main(input('how much shard to use: '), input('allow less shards (y/n): '), input('how much essense do you have: '), input('your goal: '), input('allow moe (margin of error) (y/n): '), input('how much: '))
+ma = Main()
 ma.calculate()
+print(ocr.resultList)
+
+# print(ocr.addResult())
