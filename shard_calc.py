@@ -45,7 +45,7 @@ class OverallCalcResults:
                 for b in reversed(banindexes):
                     self.resultList.pop(b)
                 break
-    def displayConclusion(self, goal):
+    def displayConclusion(self, goal, dqa, dqv):
         optimalgoallist = []
         for a in self.resultList:
             if a.value == goal:
@@ -53,10 +53,39 @@ class OverallCalcResults:
                 for b in a.wayToGet:
                     if len(b) == lencheck:
                         optimalgoallist.append(b)
-        optimalgoallist = list(map(lambda n: ' '.join(n), optimalgoallist))
-        optimalgoallist = ',\n'.join(optimalgoallist)
-        print(f'optimal goal: \n{optimalgoallist}')
-        
+                    else:
+                        break
+                # optimalgoallist = list(map(lambda n: ' '.join(n), optimalgoallist))
+                # optimalgoallist = ',\n'.join(optimalgoallist)
+                # optimalgoallist = ',\n'.join(list(map(lambda n: ' '.join(n), optimalgoallist)))
+                print('optimal goal:\n', ',\n'.join(list(map(lambda n: ' '.join(n), optimalgoallist))))
+                break
+        if not optimalgoallist:
+            if dqa:
+                waitlist = []
+                dqMarginLs = []
+                for a in list(map(lambda a: goal-(a*50), range(1, dqv+1))):
+                    if a >= 0:
+                        dqMarginLs.append(a)
+                    else:
+                        break
+                for a in dqMarginLs:
+                    for b in self.resultList:
+                        if a == b.value:
+                            lencheck = len(b.wayToGet[0])
+                            stack = []
+                            for c in b.wayToGet:
+                                if len(c) == lencheck:
+                                    stack.append(c)
+                                else:
+                                    break
+                            waitlist.append({f'with {(goal - a) // 50} daily quests': stack})
+                if waitlist:
+                    print(list(map(lambda a: f'{list(a.keys())[0]} :\n', waitlist))[0], list(map(lambda a: ",\n".join(list(map(lambda q: " ".join(q), list(a.values())[0]))), waitlist))[0])
+                    # print(list(map(lambda a: f'{list(a.keys())[0]} : {",".join(list(map(lambda q: " ".join(q), list(a.values())[0])))}', waitlist))[0])
+            else:
+                print("there's no way to achive your goal, sorry ::N((")
+
 class CalcResult:
     def __init__(self, value, wayToGet):
         self.value = value
@@ -72,13 +101,13 @@ class CalcResult:
 # 7800 +1560 -4680
 
 class Main:
-    def __init__(self, maxactions = 3, actionsbelow = 'y', shards = 450, gotoscore = 630, allowdq = 'n', dqv = 0):
+    def __init__(self, maxactions = 4, actionsbelow = 'y', shards = 450, gotoscore = 540, allowdq = 'y', dqv = 3):
         if allowdq == 'y':
             self.allowdq = True
         elif allowdq == 'n':
             self.allowdq = False
         else:
-            raise ValueError('got sth else than "y" or "n" in moe')
+            raise ValueError('got sth else than "y" or "n" in allowdq')
         if actionsbelow == 'y':
             self.actionsbelow = True
         elif actionsbelow == 'n':
@@ -150,16 +179,10 @@ class Main:
             prr = False
             # checking display setings and is "shardacc" above 0 
             if self.gotoscore < self.shards:
-                if self.allowdq:
-                    if (shardacc >= (self.gotoscore - self.dqv)) and (shardacc <= self.gotoscore):
-                        prr = not prr
-                elif (shardacc > 0) and (shardacc <= self.gotoscore):
+                if (shardacc > 0) and (shardacc <= self.gotoscore):
                     prr = not prr
             else:
-                if self.allowdq:
-                    if (shardacc >= (self.gotoscore - self.dqv)) and (shardacc <= self.gotoscore):
-                        prr = not prr
-                elif (shardacc > self.shards) and (shardacc <= self.gotoscore):
+                if (shardacc > self.shards) and (shardacc <= self.gotoscore):
                     prr = not prr
             if prr:    
                 print(self.calclist, shardacc)
@@ -189,13 +212,14 @@ class Main:
         else:
             self.singleCalc(self.maxactionsk)    
         self.ocr.uptadeResults(self.gotoscore)
-        print('res::', self.ocr.resultList)
-        print('ban::', self.ocr.banlist)
-        self.ocr.displayConclusion(self.gotoscore)
+        print('res::', list(map(lambda a: a.value, self.ocr.resultList)))
+        print('ban::', list(map(lambda a: a.value, self.ocr.banlist)))
+        self.ocr.displayConclusion(self.gotoscore, self.allowdq, self.dqv)
 
 # # self, maxactions = 2, actionsbelow = True, shards = 4437, gotoscore = 2137, allowdq = False, dqv = 0
 
 # ma = Main(input('how much shard to use: '), input('allow less shards (y/n): '), input('how much essense do you have: '), input('your goal: '), input('allow dq (daily quests) (y/n): '), input('how much dq you allow: '))
+
 ma = Main()
 ma.calculate()
 
