@@ -15,6 +15,13 @@ class Calcpart:
     def __repr__(self):
         return f"(-{self.minusindex} , {self.symbolDisplay()}, +{self.plusindex} )"
 
+class CalcResult:
+    def __init__(self, value, wayToGet):
+        self.value = value
+        self.wayToGet = [wayToGet]
+    def __repr__(self):
+        return f"{self.value} : {self.wayToGet}"
+
 class OverallCalcResults:
     def __init__(self):
         self.banlist = []
@@ -55,9 +62,6 @@ class OverallCalcResults:
                         optimalgoallist.append(b)
                     else:
                         break
-                # optimalgoallist = list(map(lambda n: ' '.join(n), optimalgoallist))
-                # optimalgoallist = ',\n'.join(optimalgoallist)
-                # optimalgoallist = ',\n'.join(list(map(lambda n: ' '.join(n), optimalgoallist)))
                 print('optimal goal:\n', ',\n'.join(list(map(lambda n: ' '.join(n), optimalgoallist))))
                 break
         if not optimalgoallist:
@@ -84,14 +88,7 @@ class OverallCalcResults:
                     print(list(map(lambda a: f'{list(a.keys())[0]} :\n', waitlist))[0], list(map(lambda a: ",\n".join(list(map(lambda q: " ".join(q), list(a.values())[0]))), waitlist))[0])
                     # print(list(map(lambda a: f'{list(a.keys())[0]} : {",".join(list(map(lambda q: " ".join(q), list(a.values())[0])))}', waitlist))[0])
             else:
-                print("there's no way to achive your goal, sorry ::N((")
-
-class CalcResult:
-    def __init__(self, value, wayToGet):
-        self.value = value
-        self.wayToGet = [wayToGet]
-    def __repr__(self):
-        return f"\n{self.value} : {self.wayToGet}\n"
+                print("there's no way to achive your goal, sorry ::((")
 
 # 450 +90 -270
 # 1350 +270 -810
@@ -212,15 +209,15 @@ class Main:
         else:
             self.singleCalc(self.maxactionsk)    
         self.ocr.uptadeResults(self.gotoscore)
-        print('res::', list(map(lambda a: a.value, self.ocr.resultList)))
-        print('ban::', list(map(lambda a: a.value, self.ocr.banlist)))
+        # print('res::', list(map(lambda a: a.value, self.ocr.resultList)))
+        # print('ban::', list(map(lambda a: a.value, self.ocr.banlist)))
         self.ocr.displayConclusion(self.gotoscore, self.allowdq, self.dqv)
 
 # # self, maxactions = 2, actionsbelow = True, shards = 4437, gotoscore = 2137, allowdq = False, dqv = 0
 
-# ma = Main(input('how much shard to use: '), input('allow less shards (y/n): '), input('how much essense do you have: '), input('your goal: '), input('allow dq (daily quests) (y/n): '), input('how much dq you allow: '))
+# ma = Main()
 
-ma = Main()
+ma = Main(input('how much shard to use: '), input('allow less shards (y/n): '), input('how much essense do you have: '), input('your goal: '), input('allow dq (daily quests) (y/n): '), input('how much dq you allow: '))
 ma.calculate()
 
 # print(self.ocr.addResult())
