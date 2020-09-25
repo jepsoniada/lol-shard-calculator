@@ -1,19 +1,13 @@
-def plus(a, b):
-    return a + b
-def minus(a, b):
-    return a - b
+import time
+start_time = time.time()
 class Calcpart:
-    def __init__(self, symbol, minusindex, plusindex):
+    def __init__(self, index, symbol):
         self.symbol = symbol
-        self.minusindex = minusindex
-        self.plusindex = plusindex
+        self.index = index
     def symbolDisplay(self):
-        if self.symbol:
-            return 1
-        else:
-            return 0
+        return 1 if self.symbol else 0
     def __repr__(self):
-        return f"(-{self.minusindex} , {self.symbolDisplay()}, +{self.plusindex} )"
+        return f"({self.index} {self.symbolDisplay()})"
 
 class CalcResult:
     def __init__(self, value, wayToGet):
@@ -36,7 +30,7 @@ class OverallCalcResults:
                     self.resultList[i].wayToGet.append(resultObj.wayToGet[0])
                     break
                 else:
-                    anacc = anacc + 1
+                    anacc += 1
             if anacc == len(self.resultList):
                 self.resultList.append(resultObj)
     def uptadeResults(self, goal):
@@ -86,7 +80,6 @@ class OverallCalcResults:
                             waitlist.append({f'with {(goal - a) // 50} daily quests': stack})
                 if waitlist:
                     print(list(map(lambda a: f'{list(a.keys())[0]} :\n', waitlist))[0], list(map(lambda a: ",\n".join(list(map(lambda q: " ".join(q), list(a.values())[0]))), waitlist))[0])
-                    # print(list(map(lambda a: f'{list(a.keys())[0]} : {",".join(list(map(lambda q: " ".join(q), list(a.values())[0])))}', waitlist))[0])
             else:
                 print("there's no way to achive your goal, sorry ::((")
 
@@ -122,102 +115,64 @@ class Main:
         self.calcfill(self.maxactions)
         print('ab: ', self.actionsbelow, 'dq: ', self.allowdq)
     def calcfill(self, howmuch):
-        self.calclist = []
-        a = 0
-        while a < howmuch:
-            self.calclist.append(Calcpart(False, 0, 0))
-            a = a + 1
+        self.calclist = [0 for a in range(howmuch)]
     def addResulter(self, resulte):
-        fullcalc = []
-        for a in self.calclist:
-            if a.symbol:
-                fullcalc.append(f"+ {self.add[a.plusindex]}")
-            else:
-                fullcalc.append(f"- {self.remove[a.minusindex]}")
+        # fullcalc = list(map(lambda a: f"+ {self.add[a.index]}" if a.symbol else f"- {self.remove[a.index]}", self.calclist))
+        fullcalc = list(map(lambda a: f"- {self.remove[a]}" if a < len(self.remove) else f"+ {self.add[a - len(self.remove)]}", self.calclist))
         self.ocr.addResult(CalcResult(resulte, fullcalc))
-        # self.ocr.addResult(resulte)
     def generateSum(self):
-        shardacc = 0
-        for i, b in enumerate(self.calclist, start=0):
-            if i > 0:
-                if b.symbol:
-                    shardacc = plus(shardacc, self.add[b.plusindex])
-                else:
-                    shardacc = minus(shardacc, self.remove[b.minusindex])
+        shardacc = self.shards
+        for b in self.calclist:
+            if b < len(self.remove):
+                shardacc -= self.remove[b]
             else:
-                if b.symbol:
-                    shardacc = plus(self.shards, self.add[b.plusindex])
-                else:
-                    shardacc = minus(self.shards, self.remove[b.minusindex])
+                shardacc += self.add[b - len(self.remove)]
         return shardacc
     def moveListByOne(self):
         for i, a in enumerate(self.calclist, start=0):
-            if a.symbol == False:
-                if a.minusindex < len(self.remove) - 1:
-                    self.calclist[i].minusindex = self.calclist[i].minusindex + 1
-                    break
-                else:
-                    self.calclist[i].minusindex = 0
-                    self.calclist[i].symbol = not self.calclist[i].symbol
-                    break
+            if a < len(self.remove) + len(self.add) - 1:
+                self.calclist[i] += 1
+                break
             else:
-                if a.plusindex < len(self.add) - 1:
-                    self.calclist[i].plusindex = self.calclist[i].plusindex + 1
-                    break
-                else:
-                    self.calclist[i].plusindex = 0
-                    self.calclist[i].symbol = not self.calclist[i].symbol
-                    if i < len(self.calclist) - 2:
-                        continue
+                self.calclist[i] = 0
+                if i < len(self.calclist) - 2:
+                    continue
     def singleCalc(self, actions):
-        multi0count = 0
-        while True:
-            shardacc = self.generateSum()
-            prr = False
-            # checking display setings and is "shardacc" above 0 
-            if self.gotoscore < self.shards:
+        if self.gotoscore < self.shards:
+            for a in range((len(self.add) + len(self.remove)) ** actions):
+                shardacc = self.generateSum()
+                # checking display setings and is "shardacc" above 0 
                 if (shardacc > 0) and (shardacc <= self.gotoscore):
-                    prr = not prr
-            else:
+                    print(self.calclist, shardacc)
+                    self.addResulter(shardacc)
+                self.moveListByOne()
+        else:
+            for a in range((len(self.add) + len(self.remove)) ** actions):
+                shardacc = self.generateSum()
+                # checking display setings and is "shardacc" above 0 
                 if (shardacc > self.shards) and (shardacc <= self.gotoscore):
-                    prr = not prr
-            if prr:    
-                print(self.calclist, shardacc)
-                self.addResulter(shardacc)
-            # checking is all possibilities tested
-            negstackacc = 0
-            for stack in self.calclist:
-                if (stack.minusindex or stack.plusindex or stack.symbol) == False:
-                    negstackacc = negstackacc + 1
-            if negstackacc == actions:
-                if multi0count < 1:
-                    multi0count = multi0count + 1
-                    print(multi0count)
-                else:
-                    break
-            self.moveListByOne()
+                    print(self.calclist, shardacc)
+                    self.addResulter(shardacc)
+                self.moveListByOne()
     def calculate(self):
         if self.actionsbelow:
-            # actAction = self.maxactions
-            # while actAction > 0:
-            #     self.calcfill(actAction)
-            #     self.singleCalc(actAction)
-            #     actAction = actAction - 1
             for a in range(1, self.maxactions+1):
                 self.calcfill(a)
                 self.singleCalc(a)
         else:
-            self.singleCalc(self.maxactionsk)    
+            self.singleCalc(self.maxactionsk)
         self.ocr.uptadeResults(self.gotoscore)
         # print('res::', list(map(lambda a: a.value, self.ocr.resultList)))
         # print('ban::', list(map(lambda a: a.value, self.ocr.banlist)))
         self.ocr.displayConclusion(self.gotoscore, self.allowdq, self.dqv)
 
+
 # # self, maxactions = 2, actionsbelow = True, shards = 4437, gotoscore = 2137, allowdq = False, dqv = 0
 
-# ma = Main()
-
-ma = Main(input('how much shard to use: '), input('allow less shards (y/n): '), input('how much essense do you have: '), input('your goal: '), input('allow dq (daily quests) (y/n): '), input('how much dq you allow: '))
+# ma = Main(input('how much shard to use: '), input('allow less shards (y/n): '), input('how much essense do you have: '), input('your goal: '), input('allow dq (daily quests) (y/n): '), input('how much dq you allow: '))
+ma = Main()
 ma.calculate()
 
 # print(self.ocr.addResult())
+
+print("--- %s seconds ---" % (time.time() - start_time))
